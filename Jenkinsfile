@@ -1,6 +1,3 @@
-Переведенный текст на русский язык:
-
-```groovy
 pipeline {
     agent any
     environment {
@@ -77,4 +74,3 @@ pipeline {
         }
     }
 }
-```
