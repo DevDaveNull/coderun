@@ -53,7 +53,6 @@ pipeline {
             script {
                 node {
             echo "Очистка рабочей области"
-            sh 'ls -l'  // Проверка прав доступа
             cleanWs()
         }
             }
