@@ -30,7 +30,7 @@ pipeline {
         stage("Деплой на стейджинг") {
             steps {
                 sh 'chmod u+x deploy smoke-tests'
-                sh './deploy staging'
+                sh './deploy'
                 sh './smoke-tests'
             }
         }
