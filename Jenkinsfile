@@ -51,6 +51,7 @@ pipeline {
         }
         cleanup {
             echo "Очистка рабочей области"
+            sh 'ls -l'  // Проверка прав доступа
             cleanWs()
         }
         success {
