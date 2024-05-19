@@ -37,7 +37,7 @@ pipeline {
                 sh 'chmod u+x deploy smoke-tests || { echo "chmod failed"; exit 1; }'
                 
                 echo "Деплой на стейджинг"
-                sh './deploy staging || { echo "deploy failed"; exit 1; }'
+                sh './deploy || { echo "deploy failed"; exit 1; }'
                 
                 echo "Выполнение smoke-тестов"
                 sh './smoke-tests || { echo "smoke-tests failed"; exit 1; }'
