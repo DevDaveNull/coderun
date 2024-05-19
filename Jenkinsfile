@@ -3,8 +3,8 @@ pipeline {
     environment {
         DB_URL = 'mysql+pymysql://usr:pwd@host:<port>/db'
         DISABLE_AUTH = true
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-access-secret-key')
+        google-access-key-id = credentials('google-access-key-id')
+        
     }
     stages {
         stage("Сборка") {
