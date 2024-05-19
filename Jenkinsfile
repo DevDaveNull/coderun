@@ -58,7 +58,7 @@ pipeline {
         }
         failure {
             echo "Это будет выполняться, если задача провалилась"
-            mail to: "ezz.email@gmail.com",
+            mail to: "pecherni@gmail.com",
                  subject: "${env.JOB_NAME} - Сборка № ${env.BUILD_NUMBER} провалилась",
                  body: "Для получения дополнительной информации о провале пайплайна, проверьте консольный вывод по адресу ${env.BUILD_URL}"
         }
