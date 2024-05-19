@@ -6,46 +6,45 @@ pipeline {
         GOOGLE_ACCESS_KEY_ID = credentials('google-access-key-id')
         
     }
-    stages {
+   stages {
         stage("Сборка") {
             steps {
-                script {
-                    node {
-                        echo "Сборка приложения..."
-                        sh '''
-                            echo "Этот блок содержит многострочные шаги"
-                            ls -lh
-                        '''
-                        sh '''
-                            echo "URL базы данных: ${DB_URL}"
-                            echo "DISABLE_AUTH: ${DISABLE_AUTH}"
-                            env
-                        '''
-                        echo "Запуск задачи с номером сборки: ${env.BUILD_NUMBER} на ${env.JENKINS_URL}"
-                    }
-                }
+                echo "Сборка приложения..."
+                sh '''
+                    echo "Этот блок содержит многострочные шаги"
+                    ls -lh
+                '''
+                sh '''
+                    echo "URL базы данных: ${DB_URL}"
+                    echo "DISABLE_AUTH: ${DISABLE_AUTH}"
+                    env
+                '''
+                echo "Запуск задачи с номером сборки: ${env.BUILD_NUMBER} на ${env.JENKINS_URL}"
             }
         }
         stage("Тестирование") {
             steps {
-                script {
-                    node {
-                        echo "Тестирование приложения..."
-                    }
-                }
+                echo "Тестирование приложения..."
             }
         }
         stage("Деплой на стейджинг") {
             steps {
-                script {
-                    node {
-                        sh 'chmod u+x deploy smoke-tests'
-                        sh './deploy'
-                        sh './smoke-tests'
-                    }
-                }
+                sh 'chmod u+x deploy smoke-tests'
+                sh './deploy staging'
+                sh './smoke-tests'
             }
         }
+        stage("Проверка работоспособности") {
+            steps {
+                input "Следует ли отправить на продакшн?"
+            }
+        }
+        stage("Деплой на продакшн") {
+            steps {
+                sh './deploy prod'
+            }
+        }
+    }
         stage("Проверка работоспособности") {
             steps {
                 script {
