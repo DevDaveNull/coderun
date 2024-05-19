@@ -4,9 +4,8 @@ pipeline {
         DB_URL = 'mysql+pymysql://usr:pwd@host:<port>/db'
         DISABLE_AUTH = true
         GOOGLE_ACCESS_KEY_ID = credentials('google-access-key-id')
-        
     }
-   stages {
+    stages {
         stage("Сборка") {
             steps {
                 echo "Сборка приложения..."
@@ -29,9 +28,19 @@ pipeline {
         }
         stage("Деплой на стейджинг") {
             steps {
-                sh 'chmod u+x deploy smoke-tests'
-                sh './deploy'
-                sh './smoke-tests'
+                echo "Проверка наличия команд"
+                sh 'which chmod || echo "chmod not found"'
+                sh 'which ./deploy || echo "./deploy not found"'
+                sh 'which ./smoke-tests || echo "./smoke-tests not found"'
+                
+                echo "Изменение прав на выполнение скриптов"
+                sh 'chmod u+x deploy smoke-tests || exit 1'
+                
+                echo "Деплой на стейджинг"
+                sh './deploy staging || exit 1'
+                
+                echo "Выполнение smoke-тестов"
+                sh './smoke-tests || exit 1'
             }
         }
         stage("Проверка работоспособности") {
@@ -41,7 +50,7 @@ pipeline {
         }
         stage("Деплой на продакшн") {
             steps {
-                sh './deploy prod'
+                sh './deploy prod || exit 1'
             }
         }
     }
