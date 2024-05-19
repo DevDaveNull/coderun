@@ -3,7 +3,7 @@ pipeline {
     environment {
         DB_URL = 'mysql+pymysql://usr:pwd@host:<port>/db'
         DISABLE_AUTH = true
-        google-access-key-id = credentials('google-access-key-id')
+        GOOGLE-ACCESS-KEY-ID = credentials('google-access-key-id')
         
     }
     stages {
