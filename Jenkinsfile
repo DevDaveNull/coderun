@@ -40,7 +40,7 @@ pipeline {
                 script {
                     node {
                         sh 'chmod u+x deploy smoke-tests'
-                        sh './deploy staging'
+                        sh './deploy'
                         sh './smoke-tests'
                     }
                 }
