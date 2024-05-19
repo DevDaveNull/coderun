@@ -34,13 +34,13 @@ pipeline {
                 sh 'which ./smoke-tests || echo "./smoke-tests not found"'
                 
                 echo "Изменение прав на выполнение скриптов"
-                sh 'chmod u+x deploy smoke-tests || exit 1'
+                sh 'chmod u+x deploy smoke-tests || { echo "chmod failed"; exit 1; }'
                 
                 echo "Деплой на стейджинг"
-                sh './deploy staging || exit 1'
+                sh './deploy staging || { echo "deploy failed"; exit 1; }'
                 
                 echo "Выполнение smoke-тестов"
-                sh './smoke-tests || exit 1'
+                sh './smoke-tests || { echo "smoke-tests failed"; exit 1; }'
             }
         }
         stage("Проверка работоспособности") {
@@ -50,7 +50,7 @@ pipeline {
         }
         stage("Деплой на продакшн") {
             steps {
-                sh './deploy prod || exit 1'
+                sh './deploy prod || { echo "deploy to prod failed"; exit 1; }'
             }
         }
     }
