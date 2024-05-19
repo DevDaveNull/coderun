@@ -45,25 +45,6 @@ pipeline {
             }
         }
     }
-        stage("Проверка работоспособности") {
-            steps {
-                script {
-                    node {
-                        input "Следует ли отправить на продакшн?"
-                    }
-                }
-            }
-        }
-        stage("Деплой на продакшн") {
-            steps {
-                script {
-                    node {
-                        sh './deploy prod'
-                    }
-                }
-            }
-        }
-    }
     post {
         always {
             script {
