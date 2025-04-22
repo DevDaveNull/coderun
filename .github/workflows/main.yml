@@ -20,15 +20,14 @@ jobs:
           ISSUE_BODY="${{ github.event.issue.body }}"
           ISSUE_URL="${{ github.event.issue.html_url }}"
 
-          echo '{
-            "name": "'"${ISSUE_TITLE:-Untitled}"'",
-            "book_id": "'"$BOOKSTACK_BOOK_ID"'",
-            "html": "<p><strong>Связанная задача:</strong> <a href='\'''"$ISSUE_URL"''\''>"$ISSUE_URL"</a></p><p><strong>Описание:</strong></p><p>"${ISSUE_BODY:-Нет описания}"</p>"
-          }' > payload.json
-
-          cat payload.json
+          echo "{
+            \"name\": \"$ISSUE_TITLE\",
+            \"book_id\": \"$BOOKSTACK_BOOK_ID\",
+            \"html\": \"<p><strong>Связанная задача:</strong> <a href='$ISSUE_URL'>$ISSUE_URL</a></p><p><strong>Описание:</strong></p><p>${ISSUE_BODY:-Нет описания}</p>\"
+          }" > payload.json
 
           curl -X POST "$BOOKSTACK_URL/api/pages" \
             -H "Authorization: Token $BOOKSTACK_API_ID:$BOOKSTACK_API_SECRET" \
             -H "Content-Type: application/json" \
             -d @payload.json
+
