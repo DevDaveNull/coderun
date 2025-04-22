@@ -29,3 +29,4 @@ jobs:
             -H "Authorization: Token $BOOKSTACK_API_ID:$BOOKSTACK_API_SECRET" \
             -H "Content-Type: application/json" \
             -d @payload.json
+
