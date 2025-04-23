@@ -20,19 +20,16 @@ jobs:
           BOOKSTACK_API_SECRET: ${{ secrets.BOOKSTACK_API_SECRET }}
           BOOKSTACK_URL: ${{ secrets.BOOKSTACK_URL }}
           BOOKSTACK_BOOK_ID: ${{ secrets.BOOKSTACK_BOOK_ID }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
         run: |
           mkdir page-generator
           cd page-generator
-
           npm init -y > /dev/null
           npm install marked node-fetch@2 > /dev/null
 
-          ISSUE_TITLE="${{ github.event.issue.title }}"
-          ISSUE_BODY="${{ github.event.issue.body }}"
-          ISSUE_URL="${{ github.event.issue.html_url }}"
-
-          echo "const fs = require('fs');
-          const fetch = require('node-fetch');
+          echo "const fetch = require('node-fetch');
           const marked = require('marked');
 
           const title = process.env.ISSUE_TITLE;
@@ -66,7 +63,3 @@ jobs:
           " > create-page.js
 
           node create-page.js
-        env:
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_URL: ${{ github.event.issue.html_url }}
