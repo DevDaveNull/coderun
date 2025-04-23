@@ -14,8 +14,9 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install markdown-to-html
-        run: npm install -g markdown-to-html-cli
+      - name: Install dependencies
+        run: |
+          npm install -g markdown-to-html-cli jq
 
       - name: Convert issue to BookStack page
         env:
@@ -32,13 +33,14 @@ jobs:
           markdown-to-html-cli issue.md -o issue.html
           HTML_BODY=$(cat issue.html | jq -Rs .)
 
-          cat <<EOF > payload.json
-          {
-            "name": "$ISSUE_TITLE",
-            "book_id": "$BOOKSTACK_BOOK_ID",
-            "html": "<p><strong>Связанная задача:</strong> <a href=\"$ISSUE_URL\">$ISSUE_URL</a></p>" + $HTML_BODY
-          }
-EOF
+          FULL_HTML="<p><strong>Связанная задача:</strong> <a href=\"$ISSUE_URL\">$ISSUE_URL</a></p>"
+          FULL_HTML_ESCAPED=$(echo "$FULL_HTML" | jq -Rs .)
+
+          echo "{
+            \"name\": $ISSUE_TITLE | jq -Rs .,
+            \"book_id\": \"$BOOKSTACK_BOOK_ID\",
+            \"html\": ${FULL_HTML_ESCAPED%\"}$(echo ${HTML_BODY#\"})
+          }" > payload.json
 
           curl -X POST "$BOOKSTACK_URL/api/pages" \
             -H "Authorization: Token $BOOKSTACK_API_ID:$BOOKSTACK_API_SECRET" \
