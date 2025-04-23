@@ -9,7 +9,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Call BookStack API
+      - name: Checkout repo (optional if needed)
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Markdown converter
+        run: npm install -g markdown-to-html-cli
+
+      - name: Convert Markdown to HTML and create BookStack page
         env:
           BOOKSTACK_API_ID: ${{ secrets.BOOKSTACK_API_ID }}
           BOOKSTACK_API_SECRET: ${{ secrets.BOOKSTACK_API_SECRET }}
@@ -20,14 +31,23 @@ jobs:
           ISSUE_BODY="${{ github.event.issue.body }}"
           ISSUE_URL="${{ github.event.issue.html_url }}"
 
+          # Сохраняем тело задачи в .md файл
+          echo "$ISSUE_BODY" > issue.md
+
+          # Конвертируем markdown → html
+          markdown-to-html-cli issue.md -o issue.html
+
+          # Подготавливаем JSON-платеж для BookStack API
+          HTML_BODY=$(cat issue.html | jq -Rs .)
+
           echo "{
             \"name\": \"$ISSUE_TITLE\",
             \"book_id\": \"$BOOKSTACK_BOOK_ID\",
-            \"html\": \"<p><strong>Связанная задача:</strong> <a href='$ISSUE_URL'>$ISSUE_URL</a></p><p><strong>Описание:</strong></p><p>${ISSUE_BODY:-Нет описания}</p>\"
+            \"html\": \"<p><strong>Связанная задача:</strong> <a href='$ISSUE_URL'>$ISSUE_URL</a></p>\" + $HTML_BODY
           }" > payload.json
 
+          # Отправляем запрос
           curl -X POST "$BOOKSTACK_URL/api/pages" \
             -H "Authorization: Token $BOOKSTACK_API_ID:$BOOKSTACK_API_SECRET" \
             -H "Content-Type: application/json" \
             -d @payload.json
-
