@@ -30,18 +30,26 @@ jobs:
           ISSUE_URL="${{ github.event.issue.html_url }}"
 
           echo "$ISSUE_BODY" > issue.md
-          markdown-to-html-cli issue.md -o issue.html
+
+          # Конвертация Markdown в HTML
+          markdown-to-html-cli --input issue.md --output issue.html
+
+          # Экранируем HTML и подготавливаем JSON
           HTML_BODY=$(cat issue.html | jq -Rs .)
+          HEADER_HTML="<p><strong>Связанная задача:</strong> <a href=\"$ISSUE_URL\">$ISSUE_URL</a></p>"
+          HEADER_ESCAPED=$(echo "$HEADER_HTML" | jq -Rs .)
 
-          FULL_HTML="<p><strong>Связанная задача:</strong> <a href=\"$ISSUE_URL\">$ISSUE_URL</a></p>"
-          FULL_HTML_ESCAPED=$(echo "$FULL_HTML" | jq -Rs .)
+          # Объединение HTML
+          COMBINED_HTML=$(echo "${HEADER_ESCAPED%\"}$(echo ${HTML_BODY#\"})")
 
+          # Запись payload
           echo "{
-            \"name\": $ISSUE_TITLE | jq -Rs .,
+            \"name\": $(echo \"$ISSUE_TITLE\" | jq -Rs .),
             \"book_id\": \"$BOOKSTACK_BOOK_ID\",
-            \"html\": ${FULL_HTML_ESCAPED%\"}$(echo ${HTML_BODY#\"})
+            \"html\": $COMBINED_HTML
           }" > payload.json
 
+          # Отправка запроса в BookStack
           curl -X POST "$BOOKSTACK_URL/api/pages" \
             -H "Authorization: Token $BOOKSTACK_API_ID:$BOOKSTACK_API_SECRET" \
             -H "Content-Type: application/json" \
