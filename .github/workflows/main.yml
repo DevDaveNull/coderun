@@ -14,43 +14,59 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: |
-          npm install -g markdown-to-html-cli jq
-
-      - name: Convert issue to BookStack page
+      - name: Create HTML and send to BookStack
         env:
           BOOKSTACK_API_ID: ${{ secrets.BOOKSTACK_API_ID }}
           BOOKSTACK_API_SECRET: ${{ secrets.BOOKSTACK_API_SECRET }}
           BOOKSTACK_URL: ${{ secrets.BOOKSTACK_URL }}
           BOOKSTACK_BOOK_ID: ${{ secrets.BOOKSTACK_BOOK_ID }}
         run: |
+          mkdir page-generator
+          cd page-generator
+
+          npm init -y > /dev/null
+          npm install marked node-fetch@2 > /dev/null
+
           ISSUE_TITLE="${{ github.event.issue.title }}"
           ISSUE_BODY="${{ github.event.issue.body }}"
           ISSUE_URL="${{ github.event.issue.html_url }}"
 
-          echo "$ISSUE_BODY" > issue.md
+          echo "const fs = require('fs');
+          const fetch = require('node-fetch');
+          const marked = require('marked');
 
-          # Конвертация Markdown в HTML
-          markdown-to-html-cli --input issue.md --output issue.html
+          const title = process.env.ISSUE_TITLE;
+          const body = process.env.ISSUE_BODY || 'Нет описания';
+          const url = process.env.ISSUE_URL;
 
-          # Экранируем HTML и подготавливаем JSON
-          HTML_BODY=$(cat issue.html | jq -Rs .)
-          HEADER_HTML="<p><strong>Связанная задача:</strong> <a href=\"$ISSUE_URL\">$ISSUE_URL</a></p>"
-          HEADER_ESCAPED=$(echo "$HEADER_HTML" | jq -Rs .)
+          const htmlBody = marked.parse(body);
+          const fullHtml = \`<p><strong>Связанная задача:</strong> <a href='\${url}'>\${url}</a></p>\n\${htmlBody}\`;
 
-          # Объединение HTML
-          COMBINED_HTML=$(echo "${HEADER_ESCAPED%\"}$(echo ${HTML_BODY#\"})")
+          const payload = {
+            name: title,
+            book_id: process.env.BOOKSTACK_BOOK_ID,
+            html: fullHtml
+          };
 
-          # Запись payload
-          echo "{
-            \"name\": $(echo \"$ISSUE_TITLE\" | jq -Rs .),
-            \"book_id\": \"$BOOKSTACK_BOOK_ID\",
-            \"html\": $COMBINED_HTML
-          }" > payload.json
+          fetch(\`\${process.env.BOOKSTACK_URL}/api/pages\`, {
+            method: 'POST',
+            headers: {
+              'Authorization': \`Token \${process.env.BOOKSTACK_API_ID}:\${process.env.BOOKSTACK_API_SECRET}\`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          }).then(res => {
+            if (!res.ok) {
+              console.error('Failed to create page:', res.status, res.statusText);
+              return res.text().then(text => console.error(text));
+            } else {
+              console.log('Page created successfully');
+            }
+          }).catch(err => console.error('Request error:', err));
+          " > create-page.js
 
-          # Отправка запроса в BookStack
-          curl -X POST "$BOOKSTACK_URL/api/pages" \
-            -H "Authorization: Token $BOOKSTACK_API_ID:$BOOKSTACK_API_SECRET" \
-            -H "Content-Type: application/json" \
-            -d @payload.json
+          node create-page.js
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
